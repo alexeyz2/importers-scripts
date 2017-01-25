@@ -56,6 +56,7 @@ case $key in
     ;;
     -ver|--version)
     FOLDER_VERSION="$2"
+    VERSION="$2"
     shift # past argument
     ;;
     -cs|--customerscripts)
