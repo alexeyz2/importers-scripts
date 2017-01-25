@@ -99,7 +99,7 @@ echo "Value of BUILDSCRIPT: $BUILDSCRIPT"
 echo "Value of BUILDCOMMAND: $BUILDCOMMAND"
 
 echo "=============== Starting to copy importer binaries ==============="
-aws s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/${FOLDER_VERSION} ${IMPORTER_DIR}
+aws s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
 chmod -R 777 ${IMPORTER_DIR}
 echo "=============== Finished copying importer binaries ==============="
 

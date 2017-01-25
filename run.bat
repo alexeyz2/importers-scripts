@@ -2,7 +2,8 @@
 
 set VERSION=1.9.1
 
-set FOLDER_VERSION=latest
+set JAVA_FOLDER_VERSION=latest
+set NET_FOLDER_VERSION=latest
 set IMPORTERS_BUCKET=aline-bas-bucket-prod
 set IMPORTER_DIR=%~dp0
 set SCRIPT_RETURN_CODE=0
@@ -35,8 +36,10 @@ if "%aux:~0,1%"=="-" (
   	if "%aux%" == "-noc" set NO_OVERRIDE_CONFIG=%~2
     if "%aux%" == "-no-bs" set BUILDSCORECARD="false"
     if "%aux%" == "--skipbuildscorecard" set BUILDSCORECARD="false"
-    if "%aux%" == "-ver" set FOLDER_VERSION=%~2
-    if "%aux%" == "--version" set FOLDER_VERSION=%~2
+    if "%aux%" == "-jver" set JAVA_FOLDER_VERSION=%~2
+    if "%aux%" == "--javaversion" set JAVA_FOLDER_VERSION=%~2
+    if "%aux%" == "-nver" set NET_FOLDER_VERSION=%~2
+    f "%aux%" == "--netversion" set NET_FOLDER_VERSION=%~2
     if "%aux%" == "-cs" set CUSTOMER_SCRIPTS=%~2
     if "%aux%" == "--customerscripts" set CUSTOMER_SCRIPTS=%~2
 )
@@ -62,7 +65,8 @@ echo "Value of BUILDSCRIPT: %BUILDSCRIPT%"
 echo "Value of BUILDCOMMAND: %BUILDCOMMAND%"
 
 echo "=============== Starting to copy importer binaries ==============="
-aws s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/%FOLDER_VERSION% %IMPORTER_DIR%
+aws s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/java-importer/%JAVA_FOLDER_VERSION% %IMPORTER_DIR%
+aws s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/net-importer/%NET_FOLDER_VERSION% %IMPORTER_DIR%
 echo "=============== Finished copying importer binaries ==============="
 
 if DEFINED CUSTOMER_SCRIPTS (
@@ -144,7 +148,7 @@ if DEFINED USE_JAVA_AGENT (
     set JAVA_TOOL_OPTIONS=
 )
 
-set NET_BUILD_DIR=%IMPORTER_DIR%\dynamic\agent
+set NET_BUILD_DIR=%IMPORTER_DIR%
 echo "NET_BUILD_DIR = %NET_BUILD_DIR%"
 
 if DEFINED NO_OVERRIDE_CONFIG (
