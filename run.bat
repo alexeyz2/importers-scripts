@@ -39,7 +39,7 @@ if "%aux:~0,1%"=="-" (
     if "%aux%" == "-jver" set JAVA_FOLDER_VERSION=%~2
     if "%aux%" == "--javaversion" set JAVA_FOLDER_VERSION=%~2
     if "%aux%" == "-nver" set NET_FOLDER_VERSION=%~2
-    f "%aux%" == "--netversion" set NET_FOLDER_VERSION=%~2
+    if "%aux%" == "--netversion" set NET_FOLDER_VERSION=%~2
     if "%aux%" == "-cs" set CUSTOMER_SCRIPTS=%~2
     if "%aux%" == "--customerscripts" set CUSTOMER_SCRIPTS=%~2
 )
