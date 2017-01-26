@@ -1,0 +1,22 @@
+{
+  "source_locations": [
+    {
+      "revision": "591dac0051d554345a1b6a3ffbacaedf67a81fc7",
+      "local_dir_mapping": "./adesivo2",
+      "is_primary_repo": "false",
+      "url": "svn+ssh://vps.supercloud.com.br/home/svn/adesivo2/trunk/Adesivo2"
+    },
+    {
+      "revision": "409",
+      "local_dir_mapping": "./",
+      "is_primary_repo": "false",
+      "url": "https://subversion.devfactory.com/repos/df-importers/java-importer-releases/nightly-test-thiago/"
+    }
+  ],
+  "product_name": "Thiago Test",
+  "external_build_info_queues": "https://sqs.us-east-1.amazonaws.com/368606650716/insights_trigger_external_ci_system",
+  "build_number": "13",
+  "env": "PROD",
+  "modules": [],
+  "product_version_name": "Thiago Test"
+}
