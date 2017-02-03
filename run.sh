@@ -2,7 +2,7 @@
 
 VERSION=1.9.1
 FOLDER_VERSION=latest
-IMPORTERS_BUCKET=aline-bas-bucket-prod
+IMPORTERS_BUCKET=aline-bas-bucket
 IMPORTER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SCRIPT_RETURN_CODE=0
 ACCEPT_GENERATED_FILES="false"
@@ -98,14 +98,14 @@ echo "Value of BUILDSCRIPT: $BUILDSCRIPT"
 echo "Value of BUILDCOMMAND: $BUILDCOMMAND"
 
 echo "=============== Starting to copy importer binaries ==============="
-aws s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
+aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
 chmod -R 777 ${IMPORTER_DIR}
 echo "=============== Finished copying importer binaries ==============="
 
 if [ ! -z "$CUSTOMER_SCRIPTS" ]; then
     echo "=============== Starting to copy ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
     mkdir -p $BASE_DIR/scripts
-    aws s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS} $BASE_DIR/scripts
+    aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS} $BASE_DIR/scripts
     chmod -R 777 $BASE_DIR/scripts
     echo "=============== Finished copying ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
 fi
@@ -138,7 +138,7 @@ export STORAGE_PROVIDER="MINIO"
 # THIS IS THE NAME OF THE BUCKET, eg s3 -> s3://aline-build-output-p9  | minio -> http://127.0.0.1:9000/minio/aline-build-output-p9
 # IN EITHER CASE THIS VARIABLE SHOULD BE SET AS "aline-build-output-p9". CURRENTLY MDM GIVE US $AWS_S3_BUCKET, THIS SHOULD BE
 # CHANGED TO STORAGE_BUCKET TO WORK FOR BOTH S3 AND MINIO
-export STORAGE_BUCKET="aline-build-output-p9"
+export STORAGE_BUCKET="aline-build-output-d9"
 # THIS VARIABLE ONLY NEEDS TO BE SET WHEN STORAGE_PROVIDER=MINIO , IN CASE OF S3 THIS CAN REMAIN EMPTY!
 # THIS SHOULD COME AS MDM PARAMETER, IT'S HARD CODED TO TEST ON LOCALHOST, BUT SHOULD BE CHANGED TO ANOTHER IP IN CASE MINIO IS NOT RUNNING LOCALLY
 #export STORAGE_HOST="http://127.0.0.1:9000"
