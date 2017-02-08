@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export BASE_DIR=/opt/dfinstaller
 VERSION=1.9.1
 FOLDER_VERSION=latest
 IMPORTERS_BUCKET=aline-bas-bucket
@@ -82,6 +83,14 @@ function checkresult {
     fi
 }
 
+aws configure set default.s3.signature_version s3v4
+export ALINE_STORAGE_ENDPOINT_URL="http://minio-server-dev.us-east-1.elasticbeanstalk.com"
+export BASE_DIR=/opt/dfinstaller
+export ALINE_METAINF_JSON_FILE=$BASE_DIR/logs/metainf/metainf.json
+export AWS_ACCESS_KEY_ID="$ALINE_STORAGE_ACCESS_KEY"
+export AWS_SECRET_ACCESS_KEY="$ALINE_STORAGE_SECRET_KEY"
+export AWS_DEFAULT_REGION=us-east-1
+
 echo "Value of AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
 echo "Value of AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
 echo "Value of BUILD_PRODUCT_VERSIONID: $BUILD_PRODUCT_VERSIONID"
@@ -98,14 +107,14 @@ echo "Value of BUILDSCRIPT: $BUILDSCRIPT"
 echo "Value of BUILDCOMMAND: $BUILDCOMMAND"
 
 echo "=============== Starting to copy importer binaries ==============="
-aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
+aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 sync "s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION}" "${IMPORTER_DIR}"
 chmod -R 777 ${IMPORTER_DIR}
 echo "=============== Finished copying importer binaries ==============="
 
 if [ ! -z "$CUSTOMER_SCRIPTS" ]; then
     echo "=============== Starting to copy ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
     mkdir -p $BASE_DIR/scripts
-    aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS} $BASE_DIR/scripts
+    aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 sync "s3://${IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS}" "$BASE_DIR/scripts"
     chmod -R 777 $BASE_DIR/scripts
     echo "=============== Finished copying ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
 fi
@@ -152,10 +161,22 @@ if [ "$ALINE_STORAGE_BACKEND_TYPE" = "AWS_S3" ]; then
     export STORAGE_PROVIDER="S3"
 fi
 
-export STORAGE_BUCKET="$S3BUCKET"
+export STORAGE_BUCKET="http://minio-server-dev.us-east-1.elasticbeanstalk.com/minio/aline-build-output-d9/"
 export STORAGE_HOST="$ALINE_STORAGE_ENDPOINT_URL"
 export STORAGE_ACCESS_KEY_ID="$ALINE_STORAGE_ACCESS_KEY"
 export STORAGE_SECRET_ACCESS_KEY="$ALINE_STORAGE_SECRET_KEY"
+export S3BUCKET=aline-build-output-d9
+export MINIO_BUCKET=aline-build-output-d9
+export MINIO_HOST="$ALINE_STORAGE_ENDPOINT_URL"
+export MINIO_ACCESS_KEY_ID="$ALINE_STORAGE_ACCESS_KEY"
+export MINIO_SECRET_ACCESS_KEY="$ALINE_STORAGE_SECRET_KEY"
+
+echo "==================VALUES=============="
+
+echo "STORAGE_BUCKET=\"$STORAGE_BUCKET\""
+echo "STORAGE_HOST=\"$STORAGE_HOST\""
+echo "STORAGE_ACCESS_KEY_ID=\"$STORAGE_ACCESS_KEY_ID\""
+echo "STORAGE_SECRET_ACCESS_KEY=\"$STORAGE_SECRET_ACCESS_KEY\""
 
 ## Start the packager
 # set JAVA_TOOL_OPTIONS empty, there can be some problem here which can break packager
