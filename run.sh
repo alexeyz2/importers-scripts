@@ -290,3 +290,9 @@ cp -r $BASE_DIR/*.log $BASE_DIR/logs
 checkresult "Error copying logs, \"cp -r $BASE_DIR/*.log $BASE_DIR/logs\""
 
 echo "Importers script completed SUCCESSFULLY"
+
+aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 cp "s3://aline-build-output-d9/$BUILD_PRODUCTID/$BUILD_PRODUCT_VERSIONID/$BUILD_JOBID/$BUILD_BUILDNUMBER/modules/dynmodules.json" "./dynmodules.json"
+echo $(awk '{gsub("http://minio-server-dev.us-east-1.elasticbeanstalk.com/minio/", "s3://", $0); print}' dynmodules.json) > ./dynmodules2.json
+aws --endpoint-url "$ALINE_STORAGE_ENDPOINT_URL" s3 cp ./dynmodules2.json "s3://aline-build-output-d9/$BUILD_PRODUCTID/$BUILD_PRODUCT_VERSIONID/$BUILD_JOBID/$BUILD_BUILDNUMBER/modules/dynmodules.json"
+
+
