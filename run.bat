@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 
 set VERSION=1.9.1
 
@@ -63,19 +64,34 @@ echo "Value of LANGUAGES2: %LANGUAGES2%"
 echo "Value of ACCEPT_GENERATED_FILES: %ACCEPT_GENERATED_FILES%"
 echo "Value of BUILDSCRIPT: %BUILDSCRIPT%"
 echo "Value of BUILDCOMMAND: %BUILDCOMMAND%"
+echo "Value of JAVA_FOLDER_VERSION: %JAVA_FOLDER_VERSION%"
+echo "Value of NET_FOLDER_VERSION: %NET_FOLDER_VERSION%"
+
+
+if NOT DEFINED ALINE_STORAGE_BACKEND_TYPE (
+    set ALINE_STORAGE_BACKEND_TYPE="AWS_S3"
+) else if "!ALINE_STORAGE_BACKEND_TYPE!" == "MINIO" (
+    echo "Minio provider selected, setting default.s3.signature_version to s3v4"
+    aws configure set default.s3.signature_version s3v4
+    aws configure set default.region us-east-1
+    set ENDPOINT_PARAM="--endpoint-url %ALINE_STORAGE_ENDPOINT_URL%"
+)
+rem S3 BUCKET WILL BE DEPRECATED WHEN ALINE START PASSING $STORAGE_PROVIDER JUST WITH BUCKET NAME, SO WE WON'T NEED TO PARSE STRING ANYMORE
+FOR /F "tokens=1 delims=/" %%G IN ("%AWS_S3_BUCKET%") DO (
+    set AWS_S3_BUCKET="s3://%%G"
+)
 
 echo "=============== Starting to copy importer binaries ==============="
-aws s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/java-importer/%JAVA_FOLDER_VERSION% %IMPORTER_DIR%
-aws s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/net-importer/%NET_FOLDER_VERSION% %IMPORTER_DIR%
+aws !ENDPOINT_PARAM! s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/java-importer/%JAVA_FOLDER_VERSION% %IMPORTER_DIR%
+aws !ENDPOINT_PARAM! s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/net-importer/%NET_FOLDER_VERSION% %IMPORTER_DIR%
 echo "=============== Finished copying importer binaries ==============="
 
 if DEFINED CUSTOMER_SCRIPTS (
     echo "=============== Starting to copy %CUSTOMER_SCRIPTS% files to %BASE_DIR%\scripts ==============="
     mkdir %BASE_DIR%\scripts
-    aws s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/scripts/%CUSTOMER_SCRIPTS% %BASE_DIR%\scripts
+    aws !ENDPOINT_PARAM! s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/scripts/%CUSTOMER_SCRIPTS% %BASE_DIR%\scripts
     echo "=============== Finished copying %CUSTOMER_SCRIPTS% files to %BASE_DIR%\scripts ==============="
 )
-
 
 set FREEPORT=
 set STARTPORT=1080
@@ -99,11 +115,7 @@ echo "Call DF_DISABLE_AGENTS to disable other agents"
 call %DF_DISABLE_AGENTS%
 set JAVA_TOOL_OPTIONS=
 
-FOR /F "tokens=1 delims=/" %%G IN ("%AWS_S3_BUCKET%") DO (
-    set S3BUCKET=%%G
-)
 set DF_PACKAGER_URL=http://localhost:%FREEPORT%
-set PACKAGING_BASE_URI=s3://%S3BUCKET%
 set ALINE_METAINF_JSON_FILE=%BASE_DIR%\logs\metainf\metainf.json
 set MODULES_KEY=modules/
 
@@ -220,7 +232,7 @@ if DEFINED BUILDSCORECARD (
 ) else (
   echo "BUILDSCORECARD post script is being invoked"
   echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-  cmd /C call %IMPORTER_DIR%\df-bs-post-script.bat
+  cmd /C call %IMPORTER_DIR%\df-bs-post-script.bat !ENDPOINT_PARAM!
   if errorlevel 1 (
       echo "BUILDSCORECARD post script FAILED, got return code: %ERRORLEVEL%"
       echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"

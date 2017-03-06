@@ -56,7 +56,6 @@ case $key in
     ;;
     -ver|--version)
     FOLDER_VERSION="$2"
-    VERSION="$2"
     shift # past argument
     ;;
     -cs|--customerscripts)
@@ -97,16 +96,27 @@ echo "Value of LANGUAGES2: $LANGUAGES2"
 echo "Value of ACCEPT_GENERATED_FILES: $ACCEPT_GENERATED_FILES"
 echo "Value of BUILDSCRIPT: $BUILDSCRIPT"
 echo "Value of BUILDCOMMAND: $BUILDCOMMAND"
+echo "Value of FOLDER_VERSION: $FOLDER_VERSION"
+
+if [ -z "$ALINE_STORAGE_BACKEND_TYPE" ]; then
+    export ALINE_STORAGE_BACKEND_TYPE="AWS_S3"
+elif [ "$ALINE_STORAGE_BACKEND_TYPE" = "MINIO" ]; then
+    echo "Minio provider selected, setting default.s3.signature_version to s3v4"
+    aws configure set default.s3.signature_version s3v4
+    aws configure set default.region us-east-1
+    ENDPOINT_PARAM="--endpoint-url ${ALINE_STORAGE_ENDPOINT_URL}"
+fi
+export AWS_S3_BUCKET="s3://$(echo $AWS_S3_BUCKET | awk -F / '{ print $1 }')"
 
 echo "=============== Starting to copy importer binaries ==============="
-aws s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
+aws ${ENDPOINT_PARAM} s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
 chmod -R 777 ${IMPORTER_DIR}
 echo "=============== Finished copying importer binaries ==============="
 
 if [ ! -z "$CUSTOMER_SCRIPTS" ]; then
     echo "=============== Starting to copy ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
     mkdir -p $BASE_DIR/scripts
-    aws s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS} $BASE_DIR/scripts
+    aws ${ENDPOINT_PARAM} s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS} $BASE_DIR/scripts
     chmod -R 777 $BASE_DIR/scripts
     echo "=============== Finished copying ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
 fi
@@ -126,10 +136,8 @@ echo "Free port found: $PORT"
 echo "Call DF_DISABLE_AGENTS to disable other agents"
 $DF_DISABLE_AGENTS
 
-#Export variables that are necessary for the generic agent
-S3BUCKET=$(echo $AWS_S3_BUCKET | awk -F / '{ print $1 }');
+# Export variables that are necessary for the generic agent
 export DF_PACKAGER_URL="http://localhost:$PORT"
-export PACKAGING_BASE_URI="s3://$S3BUCKET"
 export ALINE_METAINF_JSON_FILE=$BASE_DIR/logs/metainf/metainf.json
 export ENCODING="UTF8";
 
@@ -203,7 +211,7 @@ fi
 if [ -z "$BUILDSCORECARD" ]; then
     echo "BUILDSCORECARD post script is being invoked"
     echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    source $IMPORTER_DIR/df-bs-post-script.sh
+    source $IMPORTER_DIR/df-bs-post-script.sh ${ENDPOINT_PARAM}
     checkresult "Execution of df-bs-post-script FAILED"
     echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     echo "BUILDSCORECARD post script invocation ended"
