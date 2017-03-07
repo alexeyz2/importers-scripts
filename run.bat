@@ -17,14 +17,8 @@ if "%~1"=="" goto done
 
 set aux=%~1
 if "%aux:~0,1%"=="-" (
-    if "%aux%" == "-e" set EXCLUSIONS=%~2
-    if "%aux%" == "--exclusions" set EXCLUSIONS=%~2
     if "%aux%" == "-l" set LANGUAGES=%~2
     if "%aux%" == "--languages" set LANGUAGES=%~2
-    if "%aux%" == "-l2" set LANGUAGES2=%~2
-    if "%aux%" == "--languages2" set LANGUAGES2=%~2
-    if "%aux%" == "-b" set BUILDSCRIPT=%~2
-    if "%aux%" == "--buildscript" set BUILDSCRIPT=%~2
     if "%aux%" == "-uja" set USE_JAVA_AGENT=%~2
     if "%aux%" == "--useJavaAgent" set USE_JAVA_AGENT=%~2
     if "%aux%" == "-agf" set ACCEPT_GENERATED_FILES="true"
@@ -48,28 +42,8 @@ shift
 goto initial
 :done
 
-echo "Value of AWS_ACCESS_KEY_ID: %AWS_ACCESS_KEY_ID%"
-echo "Value of AWS_SECRET_ACCESS_KEY: %AWS_SECRET_ACCESS_KEY%"
-echo "Value of BUILD_PRODUCT_VERSIONID: %BUILD_PRODUCT_VERSIONID%"
-echo "Value of BASE_DIR: %BASE_DIR%"
-echo "Value of S3BUCKET: %S3BUCKET%"
-echo "Value of DISABLE_OTHER_AGENTS: %DISABLE_OTHER_AGENTS%"
-echo "=============== Command line args ==============="
-echo "Value of USE_JAVA_AGENT: %USE_JAVA_AGENT%"
-echo "Value of USE_NET_AGENT: %USE_NET_AGENT%"
-echo "Value of NO_OVERRIDE_CONFIG : %NO_OVERRIDE_CONFIG%"
-echo "Value of EXCLUSIONS: $%EXCLUSIONS%"
-echo "Value of LANGUAGES: %LANGUAGES%"
-echo "Value of LANGUAGES2: %LANGUAGES2%"
-echo "Value of ACCEPT_GENERATED_FILES: %ACCEPT_GENERATED_FILES%"
-echo "Value of BUILDSCRIPT: %BUILDSCRIPT%"
-echo "Value of BUILDCOMMAND: %BUILDCOMMAND%"
-echo "Value of JAVA_FOLDER_VERSION: %JAVA_FOLDER_VERSION%"
-echo "Value of NET_FOLDER_VERSION: %NET_FOLDER_VERSION%"
-
-
 if NOT DEFINED ALINE_STORAGE_BACKEND_TYPE (
-    set ALINE_STORAGE_BACKEND_TYPE="AWS_S3"
+    set ALINE_STORAGE_BACKEND_TYPE=AWS_S3
 ) else if "!ALINE_STORAGE_BACKEND_TYPE!" == "MINIO" (
     echo "Minio provider selected, setting default.s3.signature_version to s3v4"
     aws configure set default.s3.signature_version s3v4
@@ -78,7 +52,7 @@ if NOT DEFINED ALINE_STORAGE_BACKEND_TYPE (
 )
 rem S3 BUCKET WILL BE DEPRECATED WHEN ALINE START PASSING $STORAGE_PROVIDER JUST WITH BUCKET NAME, SO WE WON'T NEED TO PARSE STRING ANYMORE
 FOR /F "tokens=1 delims=/" %%G IN ("%AWS_S3_BUCKET%") DO (
-    set AWS_S3_BUCKET="s3://%%G"
+    set AWS_S3_BUCKET=s3://%%G
 )
 
 echo "=============== Starting to copy importer binaries ==============="
@@ -117,7 +91,23 @@ set JAVA_TOOL_OPTIONS=
 
 set DF_PACKAGER_URL=http://localhost:%FREEPORT%
 set ALINE_METAINF_JSON_FILE=%BASE_DIR%\logs\metainf\metainf.json
-set MODULES_KEY=modules/
+
+echo "=============== Command line args ==============="
+echo "Value of BUILD_PRODUCT_VERSIONID: %BUILD_PRODUCT_VERSIONID%"
+echo "Value of BASE_DIR: %BASE_DIR%"
+echo "Value of AWS_S3_BUCKET: %AWS_S3_BUCKET%"
+echo "Value of DISABLE_OTHER_AGENTS: %DISABLE_OTHER_AGENTS%"
+echo "Value of USE_JAVA_AGENT: %USE_JAVA_AGENT%"
+echo "Value of USE_NET_AGENT: %USE_NET_AGENT%"
+echo "Value of NO_OVERRIDE_CONFIG : %NO_OVERRIDE_CONFIG%"
+echo "Value of LANGUAGES: %LANGUAGES%"
+echo "Value of ACCEPT_GENERATED_FILES: %ACCEPT_GENERATED_FILES%"
+echo "Value of BUILDCOMMAND: %BUILDCOMMAND%"
+echo "Value of JAVA_FOLDER_VERSION: %JAVA_FOLDER_VERSION%"
+echo "Value of NET_FOLDER_VERSION: %NET_FOLDER_VERSION%"
+echo "Value of ALINE_STORAGE_BACKEND_TYPE: %ALINE_STORAGE_BACKEND_TYPE%"
+echo "Value of ALINE_STORAGE_ENDPOINT_URL: %ALINE_STORAGE_ENDPOINT_URL%"
+echo "Value of ALINE_STORAGE_BUCKET: %ALINE_STORAGE_BUCKET%"
 
 echo "Starting the packager (in test mode). PORT: %FREEPORT% testMode"
 java -jar %IMPORTER_DIR%\dfbuild-packager-%VERSION%.jar --awsKey %AWS_ACCESS_KEY_ID% --awsSecret %AWS_SECRET_ACCESS_KEY% --port %FREEPORT% --testMode true --acceptGeneratedFiles %ACCEPT_GENERATED_FILES% --preventDuplicateSources %PREVENT_DUPLICATE_SOURCES%
@@ -191,24 +181,6 @@ if DEFINED BUILDSCORECARD (
 )
 
 cd %BASE_DIR%
-if DEFINED BUILDSCRIPT (
-    echo "%BUILDSCRIPT% script is being invoked"
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    cmd /C call "%BUILDSCRIPT%"
-    if errorlevel 1 (
-        echo "%BUILDSCRIPT% script FAILED, got return code: %ERRORLEVEL%"
-        echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        echo "%BUILDSCRIPT% script invocation ended"
-        set SCRIPT_RETURN_CODE=1
-        GOTO :SHUTDOWNPKG
-    )
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    echo "%BUILDSCRIPT% script invocation ended"
-) else (
-    echo No BUILDSCRIPT defined, skip this
-)
-
-cd %BASE_DIR%
 if DEFINED BUILDCOMMAND (
     echo "%BUILDCOMMAND% command is executed"
     echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
@@ -245,35 +217,7 @@ if DEFINED BUILDSCORECARD (
 )
 
 set JAVA_TOOL_OPTIONS=
-
 cd %BASE_DIR%
-
-if DEFINED EXCLUSIONS (
-    echo Excluding folders listed in: %EXCLUSIONS%
-    for /F "tokens=* delims=" %%i in (%EXCLUSIONS%) do (
-      echo Excluding folder: %%i
-      rd /Q /S %%i
-    )
-)
-
-cd %BASE_DIR%
-
-if DEFINED LANGUAGES2 (
-    echo "Calling generic importer 2 for languages: %LANGUAGES2%"
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    java -jar %IMPORTER_DIR%\dfbuild-agent-generic-%VERSION%.jar --languages %LANGUAGES2% --packagerurl %DF_PACKAGER_URL%
-    if errorlevel 1 (
-        echo "Generic importer 2 FAILED, got return code: %ERRORLEVEL%"
-        echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        echo "Finished generic importer 2 for languages: %LANGUAGES2%"
-        set SCRIPT_RETURN_CODE=1
-        GOTO :SHUTDOWNPKG
-    )
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    echo "Finished generic importer 2 for languages: %LANGUAGES2%"
-) else (
-    echo No LANGUAGES2 defined, skip this
-)
 
 :SHUTDOWNPKG
 

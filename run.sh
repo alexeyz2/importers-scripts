@@ -18,24 +18,12 @@ do
 key="$1"
 
 case $key in
-    -e|--exclusions)
-    EXCLUSIONS="$2"
-    shift # past argument
-    ;;
     -l|--languages)
     LANGUAGES="$2"
     shift # past argument
     ;;
-    -l2|--languages2)
-    LANGUAGES2="$2"
-    shift # past argument
-    ;;
     -no-bs|--skipbuildscorecard)
     BUILDSCORECARD="false"
-    shift # past argument
-    ;;
-    -b|--buildscript)
-    BUILDSCRIPT="$2"
     shift # past argument
     ;;
     -bc|--buildcommand)
@@ -82,22 +70,6 @@ function checkresult {
     fi
 }
 
-echo "Value of AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
-echo "Value of AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
-echo "Value of BUILD_PRODUCT_VERSIONID: $BUILD_PRODUCT_VERSIONID"
-echo "Value of BASE_DIR: $BASE_DIR"
-echo "Value of S3BUCKET: $S3BUCKET"
-echo "Value of DISABLE_OTHER_AGENTS: $DISABLE_OTHER_AGENTS"
-echo "=============== Command line args ==============="
-echo "Value of USE_JAVA_AGENT: $USE_JAVA_AGENT"
-echo "Value of EXCLUSIONS: $EXCLUSIONS"
-echo "Value of LANGUAGES: $LANGUAGES"
-echo "Value of LANGUAGES2: $LANGUAGES2"
-echo "Value of ACCEPT_GENERATED_FILES: $ACCEPT_GENERATED_FILES"
-echo "Value of BUILDSCRIPT: $BUILDSCRIPT"
-echo "Value of BUILDCOMMAND: $BUILDCOMMAND"
-echo "Value of FOLDER_VERSION: $FOLDER_VERSION"
-
 if [ -z "$ALINE_STORAGE_BACKEND_TYPE" ]; then
     export ALINE_STORAGE_BACKEND_TYPE="AWS_S3"
 elif [ "$ALINE_STORAGE_BACKEND_TYPE" = "MINIO" ]; then
@@ -141,6 +113,20 @@ export DF_PACKAGER_URL="http://localhost:$PORT"
 export ALINE_METAINF_JSON_FILE=$BASE_DIR/logs/metainf/metainf.json
 export ENCODING="UTF8";
 
+echo "=============== Command line args ==============="
+echo "Value of BUILD_PRODUCT_VERSIONID: $BUILD_PRODUCT_VERSIONID"
+echo "Value of BASE_DIR: $BASE_DIR"
+echo "Value of AWS_S3_BUCKET: $AWS_S3_BUCKET"
+echo "Value of DISABLE_OTHER_AGENTS: $DISABLE_OTHER_AGENTS"
+echo "Value of USE_JAVA_AGENT: $USE_JAVA_AGENT"
+echo "Value of LANGUAGES: $LANGUAGES"
+echo "Value of ACCEPT_GENERATED_FILES: $ACCEPT_GENERATED_FILES"
+echo "Value of BUILDCOMMAND: $BUILDCOMMAND"
+echo "Value of FOLDER_VERSION: $FOLDER_VERSION"
+echo "Value of ALINE_STORAGE_BACKEND_TYPE: $ALINE_STORAGE_BACKEND_TYPE"
+echo "Value of ALINE_STORAGE_ENDPOINT_URL: $ALINE_STORAGE_ENDPOINT_URL"
+echo "Value of ALINE_STORAGE_BUCKET: $ALINE_STORAGE_BUCKET"
+
 ## Start the packager
 # set JAVA_TOOL_OPTIONS empty, there can be some problem here which can break packager
 unset JAVA_TOOL_OPTIONS
@@ -183,18 +169,6 @@ if [ -z "$BUILDSCORECARD" ]; then
     echo "BUILDSCORECARD pre script invocation ended"
 fi
 
-# Call product build script received as parameter
-if [ ! -z "$BUILDSCRIPT" ]; then
-    echo "$BUILDSCRIPT script is being invoked"
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    source $BUILDSCRIPT
-    checkresult "Execution of \"$BUILDSCRIPT\" script FAILED"
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    echo "$BUILDSCRIPT script invocation ended"
-else
-    echo "No BUILDSCRIPT defined, skip this"
-fi
-
 # Call product build command received as parameter
 if [ ! -z "$BUILDCOMMAND" ]; then
     echo "Executing build command $BUILDCOMMAND"
@@ -219,29 +193,7 @@ fi
 
 # set JAVA_TOOL_OPTIONS empty, we do not need it anymore
 unset JAVA_TOOL_OPTIONS
-
 cd $BASE_DIR
-
-# Removes all folders specified on parameter file(file containing one folder per line to be excluded)
-if [ ! -z "$EXCLUSIONS" ]; then
-    echo "Excluding folders listed in: $EXCLUSIONS"
-    while read line
-        do echo "Excluding folder: $line" && rm -rf "$line";
-    done <$EXCLUSIONS
-fi
-
-cd $BASE_DIR
-
-if [ ! -z "$LANGUAGES2" ]; then
-    echo "Calling generic importer 2 for languages: $LANGUAGES2"
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    java -jar $IMPORTER_DIR/dfbuild-agent-generic-${VERSION}.jar --languages "$LANGUAGES2" --packagerurl "$DF_PACKAGER_URL"
-    checkresult "Invocation of Generic Importer 2 for languages \"$LANGUAGES2\" FAILED"
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    echo "Finished generic importer 2 for languages: $LANGUAGES2"
-else
-    echo "No LANGUAGES2 defined, skipping Generic Importer 2"
-fi
 
 echo "Send request to packager to generate dynmodules.json and then shutdown packager"
 echo "$DF_PACKAGER_URL"
