@@ -24,7 +24,6 @@ case $key in
     ;;
     -no-bs|--skipbuildscorecard)
     BUILDSCORECARD="false"
-    shift # past argument
     ;;
     -bc|--buildcommand)
     BUILDCOMMAND="$2"
@@ -32,15 +31,12 @@ case $key in
     ;;
     -agf|--acceptGeneratedFiles)
     ACCEPT_GENERATED_FILES="true"
-    shift # past argument
     ;;
      -pds|--preventDuplicateSources)
     PREVENT_DUPLICATE_SOURCES="true"
-    shift # past argument
     ;;
     -uja|--useJavaAgent)
-    USE_JAVA_AGENT="$2"
-    shift # past argument
+    USE_JAVA_AGENT="true"
     ;;
     -ver|--version)
     FOLDER_VERSION="$2"

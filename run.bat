@@ -19,8 +19,8 @@ set aux=%~1
 if "%aux:~0,1%"=="-" (
     if "%aux%" == "-l" set LANGUAGES=%~2
     if "%aux%" == "--languages" set LANGUAGES=%~2
-    if "%aux%" == "-uja" set USE_JAVA_AGENT=%~2
-    if "%aux%" == "--useJavaAgent" set USE_JAVA_AGENT=%~2
+    if "%aux%" == "-uja" set USE_JAVA_AGENT="true"
+    if "%aux%" == "--useJavaAgent" set USE_JAVA_AGENT="true"
     if "%aux%" == "-agf" set ACCEPT_GENERATED_FILES="true"
     if "%aux%" == "--acceptGeneratedFiles" set ACCEPT_GENERATED_FILES="true"
     if "%aux%" == "-pds" set PREVENT_DUPLICATE_SOURCES="true"
