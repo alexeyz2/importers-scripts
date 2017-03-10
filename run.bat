@@ -27,8 +27,8 @@ if "%aux:~0,1%"=="-" (
     if "%aux%" == "--preventDuplicatedSources" set PREVENT_DUPLICATE_SOURCES="true"
     if "%aux%" == "-bc" set BUILDCOMMAND=%~2
     if "%aux%" == "--buildcommand" set BUILDCOMMAND=%~2
-  	if "%aux%" == "-una" set USE_NET_AGENT=%~2
-  	if "%aux%" == "-noc" set NO_OVERRIDE_CONFIG=%~2
+    if "%aux%" == "-una" set USE_NET_AGENT=%~2
+    if "%aux%" == "-noc" set NO_OVERRIDE_CONFIG=%~2
     if "%aux%" == "-no-bs" set BUILDSCORECARD="false"
     if "%aux%" == "--skipbuildscorecard" set BUILDSCORECARD="false"
     if "%aux%" == "-jver" set JAVA_FOLDER_VERSION=%~2
@@ -54,6 +54,7 @@ rem S3 BUCKET WILL BE DEPRECATED WHEN ALINE START PASSING $STORAGE_PROVIDER JUST
 FOR /F "tokens=1 delims=/" %%G IN ("%AWS_S3_BUCKET%") DO (
     set AWS_S3_BUCKET=s3://%%G
 )
+set ALINE_STORAGE_BUCKET=s3://%ALINE_STORAGE_BUCKET%
 
 echo "=============== Starting to copy importer binaries ==============="
 aws !ENDPOINT_PARAM! s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/java-importer/%JAVA_FOLDER_VERSION% %IMPORTER_DIR%

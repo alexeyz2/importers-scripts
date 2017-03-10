@@ -75,6 +75,7 @@ elif [ "$ALINE_STORAGE_BACKEND_TYPE" = "MINIO" ]; then
     ENDPOINT_PARAM="--endpoint-url ${ALINE_STORAGE_ENDPOINT_URL}"
 fi
 export AWS_S3_BUCKET="s3://$(echo $AWS_S3_BUCKET | awk -F / '{ print $1 }')"
+export ALINE_STORAGE_BUCKET="s3://${ALINE_STORAGE_BUCKET}"
 
 echo "=============== Starting to copy importer binaries ==============="
 aws ${ENDPOINT_PARAM} s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
