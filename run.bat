@@ -5,7 +5,6 @@ set VERSION=1.9.1
 
 set JAVA_FOLDER_VERSION=latest
 set NET_FOLDER_VERSION=latest
-set IMPORTERS_BUCKET=aline-bas-bucket-prod
 set IMPORTER_DIR=%~dp0
 set SCRIPT_RETURN_CODE=0
 set ACCEPT_GENERATED_FILES="false"
@@ -42,6 +41,10 @@ shift
 goto initial
 :done
 
+if NOT DEFINED ALINE_IMPORTERS_BUCKET (
+    set ALINE_IMPORTERS_BUCKET=aline-bas-bucket-prod
+)
+
 if NOT DEFINED ALINE_STORAGE_BACKEND_TYPE (
     set ALINE_STORAGE_BACKEND_TYPE=AWS_S3
 ) else if "!ALINE_STORAGE_BACKEND_TYPE!" == "MINIO" (
@@ -57,14 +60,14 @@ FOR /F "tokens=1 delims=/" %%G IN ("%AWS_S3_BUCKET%") DO (
 set ALINE_STORAGE_BUCKET=s3://%ALINE_STORAGE_BUCKET%
 
 echo "=============== Starting to copy importer binaries ==============="
-aws !ENDPOINT_PARAM! s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/java-importer/%JAVA_FOLDER_VERSION% %IMPORTER_DIR%
-aws !ENDPOINT_PARAM! s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/binaries/net-importer/%NET_FOLDER_VERSION% %IMPORTER_DIR%
+aws !ENDPOINT_PARAM! s3 sync s3://!ALINE_IMPORTERS_BUCKET!/auto-importers/binaries/java-importer/%JAVA_FOLDER_VERSION% %IMPORTER_DIR%
+aws !ENDPOINT_PARAM! s3 sync s3://!ALINE_IMPORTERS_BUCKET!/auto-importers/binaries/net-importer/%NET_FOLDER_VERSION% %IMPORTER_DIR%
 echo "=============== Finished copying importer binaries ==============="
 
 if DEFINED CUSTOMER_SCRIPTS (
     echo "=============== Starting to copy %CUSTOMER_SCRIPTS% files to %BASE_DIR%\scripts ==============="
     mkdir %BASE_DIR%\scripts
-    aws !ENDPOINT_PARAM! s3 sync s3://%IMPORTERS_BUCKET%/auto-importers/scripts/%CUSTOMER_SCRIPTS% %BASE_DIR%\scripts
+    aws !ENDPOINT_PARAM! s3 sync s3://!ALINE_IMPORTERS_BUCKET!/auto-importers/scripts/%CUSTOMER_SCRIPTS% %BASE_DIR%\scripts
     echo "=============== Finished copying %CUSTOMER_SCRIPTS% files to %BASE_DIR%\scripts ==============="
 )
 

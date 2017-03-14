@@ -2,7 +2,7 @@
 
 VERSION=1.9.1
 FOLDER_VERSION=latest
-IMPORTERS_BUCKET=aline-bas-bucket-prod
+ALINE_IMPORTERS_BUCKET=${ALINE_IMPORTERS_BUCKET:-aline-bas-bucket-prod}
 IMPORTER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SCRIPT_RETURN_CODE=0
 ACCEPT_GENERATED_FILES="false"
@@ -78,14 +78,14 @@ export AWS_S3_BUCKET="s3://$(echo $AWS_S3_BUCKET | awk -F / '{ print $1 }')"
 export ALINE_STORAGE_BUCKET="s3://${ALINE_STORAGE_BUCKET}"
 
 echo "=============== Starting to copy importer binaries ==============="
-aws ${ENDPOINT_PARAM} s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
+aws ${ENDPOINT_PARAM} s3 sync s3://${ALINE_IMPORTERS_BUCKET}/auto-importers/binaries/java-importer/${FOLDER_VERSION} ${IMPORTER_DIR}
 chmod -R 777 ${IMPORTER_DIR}
 echo "=============== Finished copying importer binaries ==============="
 
 if [ ! -z "$CUSTOMER_SCRIPTS" ]; then
     echo "=============== Starting to copy ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
     mkdir -p $BASE_DIR/scripts
-    aws ${ENDPOINT_PARAM} s3 sync s3://${IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS} $BASE_DIR/scripts
+    aws ${ENDPOINT_PARAM} s3 sync s3://${ALINE_IMPORTERS_BUCKET}/auto-importers/scripts/${CUSTOMER_SCRIPTS} $BASE_DIR/scripts
     chmod -R 777 $BASE_DIR/scripts
     echo "=============== Finished copying ${CUSTOMER_SCRIPTS} files to ${BASE_DIR}/scripts ==============="
 fi
